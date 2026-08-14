@@ -3,7 +3,10 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { config } from './config/index.js';
+import { alertRouter } from './modules/alerts/alert.routes.js';
+import { binRouter } from './modules/bins/bin.routes.js';
 import { collectionRouter } from './modules/collection/collection.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { telemetryRouter } from './modules/telemetry/telemetry.routes.js';
 import { errorHandler } from './shared/middlewares/errorHandler.js';
@@ -11,9 +14,6 @@ import { notFoundHandler } from './shared/middlewares/notFoundHandler.js';
 import { rateLimiter } from './shared/middlewares/rateLimiter.js';
 import { requestId } from './shared/middlewares/requestId.js';
 import { requestLogger } from './shared/middlewares/requestLogger.js';
-import { binsRouter } from './modules/bins/bin.routes.js';
-import { alertsRouter } from './modules/alerts/alert.routes.js';
-import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 
 export function createApp() {
   const app = express();
@@ -34,13 +34,9 @@ export function createApp() {
 
   app.use('/api/v1/telemetry', telemetryRouter);
   app.use('/api/v1/collection', collectionRouter);
-
-  app.use('/api/v1/bins', binsRouter);
-  app.use('/api/v1/alerts', alertsRouter);
+  app.use('/api/v1/bins', binRouter);
+  app.use('/api/v1/alerts', alertRouter);
   app.use('/api/v1/dashboard', dashboardRouter);
-
-  // Business modules (bins, alerts, ai, routing) are mounted here
-  // under /api/v1/* as they're implemented.
 
   app.use(notFoundHandler);
   app.use(errorHandler);

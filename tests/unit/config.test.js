@@ -9,6 +9,7 @@ describe('config', () => {
     expect(config.kafka.brokers).toBeInstanceOf(Array);
     expect(config.kafka.brokers.length).toBeGreaterThan(0);
     expect(config.timeseries.url).toBeTypeOf('string');
+    expect(config.timeseries.timeoutMs).toBeTypeOf('number');
     expect(config.aiService.timeoutMs).toBeTypeOf('number');
     expect(config.routeService.timeoutMs).toBeTypeOf('number');
     expect(config.cors.origin).toBeInstanceOf(Array);

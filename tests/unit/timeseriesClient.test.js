@@ -71,4 +71,89 @@ describe('TimeseriesClient', () => {
   it('requires a dbName', () => {
     expect(() => new TimeseriesClient({ httpClient: makeFakeHttp() })).toThrow(/dbName/);
   });
+
+  describe('query', () => {
+    function makeSeriesResponse(columns, rows) {
+      return { data: { results: [{ statement_id: 0, series: [{ name: 'telemetry', columns, values: rows }] }] } };
+    }
+
+    it('builds a WHERE clause from tag filters and a time range, and parses rows into objects', async () => {
+      const httpClient = makeFakeHttp({
+        getResult: makeSeriesResponse(
+          ['time', 'battery', 'fillLevel'],
+          [
+            ['2026-08-09T08:10:00Z', 76, 82],
+            ['2026-08-09T08:05:00Z', 77, 79],
+          ],
+        ),
+      });
+      const client = new TimeseriesClient({ dbName: 'db', httpClient });
+
+      const points = await client.query('telemetry', {
+        tags: { binId: 'BIN-001' },
+        from: 1_700_000_000_000,
+        to: 1_700_000_100_000,
+        limit: 50,
+      });
+
+      expect(httpClient.get).toHaveBeenCalledTimes(1);
+      const [path, options] = httpClient.get.mock.calls[0];
+      expect(path).toBe('/query');
+      expect(options.params.db).toBe('db');
+      expect(options.params.q).toContain(`"binId" = 'BIN-001'`);
+      expect(options.params.q).toContain('time >= 1700000000000ms');
+      expect(options.params.q).toContain('time <= 1700000100000ms');
+      expect(options.params.q).toContain('ORDER BY time DESC LIMIT 50');
+
+      expect(points).toEqual([
+        { time: '2026-08-09T08:10:00Z', battery: 76, fillLevel: 82 },
+        { time: '2026-08-09T08:05:00Z', battery: 77, fillLevel: 79 },
+      ]);
+    });
+
+    it('returns an empty array when there is no matching series', async () => {
+      const httpClient = makeFakeHttp({ getResult: { data: { results: [{ statement_id: 0 }] } } });
+      const client = new TimeseriesClient({ dbName: 'db', httpClient });
+
+      await expect(client.query('telemetry', { tags: { binId: 'BIN-999' } })).resolves.toEqual([]);
+    });
+
+    it('throws when InfluxDB reports a query error', async () => {
+      const httpClient = makeFakeHttp({
+        getResult: { data: { results: [{ statement_id: 0, error: 'malformed query' }] } },
+      });
+      const client = new TimeseriesClient({ dbName: 'db', httpClient });
+
+      await expect(client.query('telemetry', {})).rejects.toThrow(/malformed query/);
+    });
+
+    it('escapes single quotes in tag values', async () => {
+      const httpClient = makeFakeHttp({ getResult: makeSeriesResponse(['time'], []) });
+      const client = new TimeseriesClient({ dbName: 'db', httpClient });
+
+      await client.query('telemetry', { tags: { binId: "BIN'; DROP" } });
+
+      const [, options] = httpClient.get.mock.calls[0];
+      expect(options.params.q).toContain(`'BIN\\'; DROP'`);
+    });
+  });
+
+  describe('getTimeseriesClient factory', () => {
+    it('passes the configured timeout through to the underlying HTTP client', async () => {
+      vi.resetModules();
+      const mod = await import('../../src/shared/database/timeseriesClient.js');
+
+      const client = mod.getTimeseriesClient({
+        timeseries: {
+          url: 'http://localhost:8086',
+          dbName: 'smart_waste_telemetry',
+          user: '',
+          password: '',
+          timeoutMs: 1234,
+        },
+      });
+
+      expect(client.http.defaults.timeout).toBe(1234);
+    });
+  });
 });

@@ -20,7 +20,9 @@ function pinoLogCreator() {
   return ({ namespace, level, log }) => {
     const { message, ...rest } = log;
     const pinoLevel = KAFKAJS_TO_PINO_LEVEL[level] ?? 'info';
-    if (pinoLevel === 'silent') return;
+    if (pinoLevel === 'silent') {
+      return;
+    }
     logger[pinoLevel]({ namespace, ...rest }, message);
   };
 }

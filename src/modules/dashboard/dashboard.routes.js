@@ -1,9 +1,9 @@
-import express from 'express';
-import { summary } from './dashboard.controller.js';
+import { Router } from 'express';
 
-const router = express.Router();
+import { getSummary } from './dashboard.controller.js';
 
-// GET /api/v1/dashboard/summary
-router.get('/summary', summary);
+const router = Router();
+
+router.get('/summary', getSummary);
 
 export { router as dashboardRouter };

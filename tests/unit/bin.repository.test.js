@@ -5,6 +5,7 @@ vi.mock('../../src/modules/bins/bin.model.js', () => ({
     findOne: vi.fn(),
     findOneAndUpdate: vi.fn(),
     find: vi.fn(),
+    aggregate: vi.fn(),
   },
 }));
 
@@ -109,5 +110,36 @@ describe('bin.repository', () => {
     expect(await binRepository.findManyByBinIds([])).toEqual([]);
     expect(await binRepository.findManyByBinIds(undefined)).toEqual([]);
     expect(Bin.find).not.toHaveBeenCalled();
+  });
+
+  it('getSummaryStats returns the aggregate result when bins exist', async () => {
+    Bin.aggregate.mockResolvedValue([
+      { totalBins: 10, normalBins: 5, nearFullBins: 3, fullBins: 2, averageFillLevel: 42.5 },
+    ]);
+
+    const result = await binRepository.getSummaryStats();
+
+    expect(Bin.aggregate).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({
+      totalBins: 10,
+      normalBins: 5,
+      nearFullBins: 3,
+      fullBins: 2,
+      averageFillLevel: 42.5,
+    });
+  });
+
+  it('getSummaryStats returns all-zero defaults when there are no bins', async () => {
+    Bin.aggregate.mockResolvedValue([]);
+
+    const result = await binRepository.getSummaryStats();
+
+    expect(result).toEqual({
+      totalBins: 0,
+      normalBins: 0,
+      nearFullBins: 0,
+      fullBins: 0,
+      averageFillLevel: 0,
+    });
   });
 });

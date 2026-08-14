@@ -26,6 +26,7 @@ const envSchema = z.object({
   TIMESERIES_DB_NAME: z.string().min(1, 'TIMESERIES_DB_NAME is required'),
   TIMESERIES_DB_USER: z.string().optional().default(''),
   TIMESERIES_DB_PASSWORD: z.string().optional().default(''),
+  TIMESERIES_DB_TIMEOUT: z.coerce.number().int().positive().default(5000),
 
   AI_SERVICE_URL: z.string().min(1, 'AI_SERVICE_URL is required'),
   AI_SERVICE_TIMEOUT: z.coerce.number().int().positive().default(5000),

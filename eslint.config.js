@@ -31,5 +31,13 @@ export default [
       },
     },
   },
+  {
+    // A standalone dev-only CLI script — console output is its whole
+    // purpose, not debug noise left behind in application code.
+    files: ['mock-iot/**/*.js'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   prettierConfig,
 ];

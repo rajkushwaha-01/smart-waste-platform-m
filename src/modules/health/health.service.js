@@ -14,8 +14,15 @@ import { getProducerConnectionStatus } from '../../shared/messaging/kafkaClient.
  * balancers poll frequently. It's reported as "configured" instead;
  * a dedicated readiness check can call client.ping() if ever needed.
  *
- * AI service/Route service aren't wired up yet, so those stay as an
- * explicit 'unknown' extension point until their client modules exist.
+ * Same reasoning for the AI and Route services: their client modules
+ * exist (modules/ai, modules/route) and are actively used on the
+ * telemetry/collection request paths, but this liveness endpoint
+ * deliberately does not call out to them — that would turn a cheap,
+ * frequently-polled health check into a slow one at the mercy of
+ * two external services' latency. They're reported as "configured"
+ * only; failures on the actual request paths are handled there
+ * (AI: consumer degrades to prediction:null; Route: 503 to the
+ * caller — see telemetry.consumer.js and collection.controller.js).
  */
 export function getHealthStatus() {
   const dependencies = {

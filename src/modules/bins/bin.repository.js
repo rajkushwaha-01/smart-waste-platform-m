@@ -59,8 +59,12 @@ export async function applyDecisionState(
 
 export async function list({ status, priority } = {}) {
   const filter = {};
-  if (status) filter.status = status;
-  if (priority) filter.priority = priority;
+  if (status) {
+    filter.status = status;
+  }
+  if (priority) {
+    filter.priority = priority;
+  }
   return Bin.find(filter).sort({ priority: -1, currentFillLevel: -1 });
 }
 
@@ -70,6 +74,41 @@ export async function list({ status, priority } = {}) {
  * CollectionTask only stores binId, not coordinates.
  */
 export async function findManyByBinIds(binIds) {
-  if (!Array.isArray(binIds) || binIds.length === 0) return [];
+  if (!Array.isArray(binIds) || binIds.length === 0) {
+    return [];
+  }
   return Bin.find({ binId: { $in: binIds } }).lean();
+}
+
+const EMPTY_SUMMARY_STATS = {
+  totalBins: 0,
+  normalBins: 0,
+  nearFullBins: 0,
+  fullBins: 0,
+  averageFillLevel: 0,
+};
+
+/**
+ * Single-pass aggregate for the dashboard summary — counts bins by
+ * fillStatus and averages currentFillLevel across the whole
+ * collection, computed in Mongo rather than pulling every bin
+ * document into the app to tally in memory.
+ */
+export async function getSummaryStats() {
+  const [result] = await Bin.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalBins: { $sum: 1 },
+        normalBins: { $sum: { $cond: [{ $eq: ['$fillStatus', 'normal'] }, 1, 0] } },
+        nearFullBins: { $sum: { $cond: [{ $eq: ['$fillStatus', 'near_full'] }, 1, 0] } },
+        fullBins: { $sum: { $cond: [{ $eq: ['$fillStatus', 'full'] }, 1, 0] } },
+        averageFillLevel: { $avg: '$currentFillLevel' },
+      },
+    },
+  ]);
+
+  return result
+    ? { ...EMPTY_SUMMARY_STATS, ...result, averageFillLevel: result.averageFillLevel ?? 0 }
+    : EMPTY_SUMMARY_STATS;
 }

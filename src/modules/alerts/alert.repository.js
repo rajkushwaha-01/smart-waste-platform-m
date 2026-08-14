@@ -14,7 +14,15 @@ export async function resolveAlert(alertId) {
 
 export async function list({ status, severity } = {}) {
   const filter = {};
-  if (status) filter.status = status;
-  if (severity) filter.severity = severity;
+  if (status) {
+    filter.status = status;
+  }
+  if (severity) {
+    filter.severity = severity;
+  }
   return Alert.find(filter).sort({ createdAt: -1 });
+}
+
+export async function countOpen() {
+  return Alert.countDocuments({ status: 'open' });
 }

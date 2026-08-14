@@ -37,6 +37,7 @@ export const config = {
     dbName: env.TIMESERIES_DB_NAME,
     user: env.TIMESERIES_DB_USER,
     password: env.TIMESERIES_DB_PASSWORD,
+    timeoutMs: env.TIMESERIES_DB_TIMEOUT,
   },
 
   aiService: {

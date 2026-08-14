@@ -6,6 +6,7 @@ vi.mock('../../src/modules/alerts/alert.model.js', () => ({
     findOne: vi.fn(),
     findByIdAndUpdate: vi.fn(),
     find: vi.fn(),
+    countDocuments: vi.fn(),
   },
 }));
 
@@ -58,5 +59,14 @@ describe('alert.repository', () => {
       { $set: { status: 'resolved' } },
       { new: true },
     );
+  });
+
+  it('countOpen counts only open alerts', async () => {
+    Alert.countDocuments.mockResolvedValue(4);
+
+    const result = await alertRepository.countOpen();
+
+    expect(Alert.countDocuments).toHaveBeenCalledWith({ status: 'open' });
+    expect(result).toBe(4);
   });
 });

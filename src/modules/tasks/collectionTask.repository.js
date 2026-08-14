@@ -19,8 +19,12 @@ export async function findActiveTaskForBin(binId) {
 
 export async function updateStatus(taskId, status) {
   const update = { status };
-  if (status === 'assigned') update.assignedAt = new Date();
-  if (status === 'completed') update.completedAt = new Date();
+  if (status === 'assigned') {
+    update.assignedAt = new Date();
+  }
+  if (status === 'completed') {
+    update.completedAt = new Date();
+  }
   return CollectionTask.findByIdAndUpdate(taskId, { $set: update }, { new: true });
 }
 
@@ -39,14 +43,24 @@ export async function listQueue() {
   return tasks.sort((a, b) => {
     const weightDiff =
       (QUEUE_PRIORITY_WEIGHT[b.priority] ?? 0) - (QUEUE_PRIORITY_WEIGHT[a.priority] ?? 0);
-    if (weightDiff !== 0) return weightDiff;
+    if (weightDiff !== 0) {
+      return weightDiff;
+    }
     return new Date(a.createdAt) - new Date(b.createdAt);
   });
 }
 
 export async function list({ status, priority } = {}) {
   const filter = {};
-  if (status) filter.status = status;
-  if (priority) filter.priority = priority;
+  if (status) {
+    filter.status = status;
+  }
+  if (priority) {
+    filter.priority = priority;
+  }
   return CollectionTask.find(filter).sort({ createdAt: -1 });
+}
+
+export async function countActive() {
+  return CollectionTask.countDocuments({ status: { $in: ACTIVE_TASK_STATUSES } });
 }

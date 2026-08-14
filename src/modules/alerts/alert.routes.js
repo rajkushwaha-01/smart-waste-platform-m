@@ -1,9 +1,9 @@
-import express from 'express';
+import { Router } from 'express';
+
 import { listAlerts } from './alert.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-// GET /api/v1/alerts
 router.get('/', listAlerts);
 
-export { router as alertsRouter };
+export { router as alertRouter };

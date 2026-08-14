@@ -1,15 +1,11 @@
-import express from 'express';
-import { listBins, getBin, getBinTelemetry } from './bin.controller.js';
+import { Router } from 'express';
 
-const router = express.Router();
+import { listBins, getBin, getBinTelemetryHistory } from './bin.controller.js';
 
-// GET /api/v1/bins
+const router = Router();
+
 router.get('/', listBins);
-
-// GET /api/v1/bins/:binId
+router.get('/:binId/telemetry', getBinTelemetryHistory);
 router.get('/:binId', getBin);
 
-// GET /api/v1/bins/:binId/telemetry
-router.get('/:binId/telemetry', getBinTelemetry);
-
-export { router as binsRouter };
+export { router as binRouter };

@@ -10,6 +10,7 @@ vi.mock('../../src/modules/tasks/collectionTask.model.js', async () => {
       findById: vi.fn(),
       findByIdAndUpdate: vi.fn(),
       find: vi.fn(),
+      countDocuments: vi.fn(),
     },
   };
 });
@@ -89,5 +90,16 @@ describe('collectionTask.repository', () => {
       status: { $in: ['pending', 'assigned', 'in_progress'] },
     });
     expect(queue.map((t) => t._id)).toEqual(['b', 'c', 'd', 'a']);
+  });
+
+  it('countActive counts only active-status tasks', async () => {
+    CollectionTask.countDocuments.mockResolvedValue(3);
+
+    const result = await taskRepository.countActive();
+
+    expect(CollectionTask.countDocuments).toHaveBeenCalledWith({
+      status: { $in: ['pending', 'assigned', 'in_progress'] },
+    });
+    expect(result).toBe(3);
   });
 });

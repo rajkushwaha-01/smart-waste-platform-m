@@ -8,15 +8,38 @@ function escapeFieldStringValue(value) {
   return String(value).replace(/"/g, '\\"');
 }
 
+function escapeInfluxQLString(value) {
+  return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/** Turns an InfluxDB 1.x query response into a flat array of plain
+ * objects (one per row, keyed by column name). Returns [] for any
+ * shape with no matching series (e.g. no data in range). */
+function parseSeriesResponse(data) {
+  const series = data?.results?.[0]?.series;
+  if (!Array.isArray(series) || series.length === 0) {
+    return [];
+  }
+
+  const { columns, values } = series[0];
+  return values.map((row) => Object.fromEntries(columns.map((col, i) => [col, row[i]])));
+}
+
 /** Formats a single field value per InfluxDB line-protocol rules, or
  * returns null to signal "omit this field" for null/undefined input. */
 function formatFieldValue(value) {
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
   if (typeof value === 'number') {
-    if (!Number.isFinite(value)) return null;
+    if (!Number.isFinite(value)) {
+      return null;
+    }
     return Number.isInteger(value) ? `${value}i` : String(value);
   }
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false';
+  }
   return `"${escapeFieldStringValue(value)}"`;
 }
 
@@ -82,6 +105,47 @@ export class TimeseriesClient {
     });
   }
 
+  /**
+   * Queries points for one measurement, optionally filtered by tag
+   * equality and/or a time range, newest first. This — together with
+   * writePoint() — is the ONLY place in the codebase that constructs
+   * InfluxQL; callers (telemetryHistory.repository.js) never see the
+   * query language, same as they never see the line-protocol format.
+   *
+   * @param {string} measurement - e.g. "telemetry"
+   * @param {object} [options]
+   * @param {Record<string,string>} [options.tags] - equality filters on indexed tags (e.g. { binId })
+   * @param {number|Date} [options.from] - inclusive lower time bound
+   * @param {number|Date} [options.to] - inclusive upper time bound
+   * @param {number} [options.limit] - max points to return (default 500)
+   */
+  async query(measurement, { tags = {}, from, to, limit = 500 } = {}) {
+    const conditions = Object.entries(tags)
+      .filter(([, value]) => value !== undefined && value !== null && value !== '')
+      .map(([key, value]) => `"${key}" = '${escapeInfluxQLString(value)}'`);
+
+    if (from !== undefined) {
+      const fromMs = from instanceof Date ? from.getTime() : from;
+      conditions.push(`time >= ${Math.round(fromMs)}ms`);
+    }
+    if (to !== undefined) {
+      const toMs = to instanceof Date ? to.getTime() : to;
+      conditions.push(`time <= ${Math.round(toMs)}ms`);
+    }
+
+    const where = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : '';
+    const q = `SELECT * FROM "${measurement}"${where} ORDER BY time DESC LIMIT ${Math.trunc(limit)}`;
+
+    const res = await this.http.get('/query', { params: { db: this.dbName, q } });
+
+    const queryError = res.data?.results?.[0]?.error;
+    if (queryError) {
+      throw new Error(`Time-series query failed: ${queryError}`);
+    }
+
+    return parseSeriesResponse(res.data);
+  }
+
   /** Lightweight reachability check. Returns false on any failure
    * rather than throwing, since this is used for best-effort status
    * reporting, not as a precondition for writes. */
@@ -113,6 +177,7 @@ export function getTimeseriesClient(config) {
       dbName: config.timeseries.dbName,
       username: config.timeseries.user || undefined,
       password: config.timeseries.password || undefined,
+      timeoutMs: config.timeseries.timeoutMs,
     });
   }
   return singleton;

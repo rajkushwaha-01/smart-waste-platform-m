@@ -32,8 +32,12 @@ export const CRITICAL_FILL_THRESHOLD = 95;
 const PRIORITY_BY_FILL_STATUS = { full: 'high', near_full: 'medium', normal: 'low' };
 
 function deriveFillStatus(fillLevel) {
-  if (fillLevel >= FULL_FILL_THRESHOLD) return 'full';
-  if (fillLevel >= NEAR_FULL_FILL_THRESHOLD) return 'near_full';
+  if (fillLevel >= FULL_FILL_THRESHOLD) {
+    return 'full';
+  }
+  if (fillLevel >= NEAR_FULL_FILL_THRESHOLD) {
+    return 'near_full';
+  }
   return 'normal';
 }
 
@@ -41,7 +45,9 @@ function deriveFillStatus(fillLevel) {
  * signal to escalate the decision, independent of the current
  * fillLevel-based classification. */
 function isAiOverflowSignal(prediction) {
-  if (!prediction) return false;
+  if (!prediction) {
+    return false;
+  }
   return (
     prediction.predictedFillLevel >= AI_PREDICTED_FULL_THRESHOLD &&
     prediction.overflowProbability >= AI_HIGH_OVERFLOW_PROBABILITY_THRESHOLD
@@ -204,6 +210,7 @@ export async function evaluateTelemetry({ event, prediction = null, bin = null, 
 
   logger.info(
     {
+      eventId: event.eventId,
       binId: event.binId,
       fillStatus,
       priority,

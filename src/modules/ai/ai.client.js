@@ -153,6 +153,7 @@ export async function requestPrediction(payload, { httpClient = getHttpClient() 
       logger.warn(
         {
           err: classified,
+          binId: payload?.binId,
           attempt,
           maxAttempts,
           retryable: classified.isRetryable,

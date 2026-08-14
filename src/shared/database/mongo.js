@@ -8,7 +8,9 @@ mongoose.set('strictQuery', true);
 let listenersAttached = false;
 
 function attachConnectionListeners() {
-  if (listenersAttached) return;
+  if (listenersAttached) {
+    return;
+  }
   listenersAttached = true;
 
   mongoose.connection.on('connected', () => logger.info('MongoDB connection established'));
