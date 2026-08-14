@@ -1,6 +1,13 @@
 import { requestPrediction } from './ai.client.js';
 
-export { AiClientError, AiTimeoutError, AiNetworkError, AiRequestError, AiServerError, AiMalformedResponseError } from './ai.client.js';
+export {
+  AiClientError,
+  AiTimeoutError,
+  AiNetworkError,
+  AiRequestError,
+  AiServerError,
+  AiMalformedResponseError,
+} from './ai.client.js';
 
 /**
  * ASSUMED CONTRACT — the real AI API request/response shape was not
@@ -27,7 +34,7 @@ function toAiRequest(event) {
 function toDomainPrediction(raw) {
   return {
     predictedFillLevel: raw.predictedFillLevel,
-    overflowRiskScore: raw.overflowRiskScore,
+    overflowProbability: raw.overflowProbability,
     overflowEtaHours: raw.overflowEtaHours ?? null,
     confidence: raw.confidence ?? null,
   };

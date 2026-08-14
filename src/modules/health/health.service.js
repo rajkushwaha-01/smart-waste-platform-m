@@ -20,7 +20,10 @@ import { getProducerConnectionStatus } from '../../shared/messaging/kafkaClient.
 export function getHealthStatus() {
   const dependencies = {
     mongodb: { configured: Boolean(config.mongo.uri), status: getMongoConnectionStatus() },
-    kafka: { configured: Boolean(config.kafka.brokers.length), status: getProducerConnectionStatus() },
+    kafka: {
+      configured: Boolean(config.kafka.brokers.length),
+      status: getProducerConnectionStatus(),
+    },
     timeseriesDb: { configured: Boolean(config.timeseries.url), status: 'unknown' },
     aiService: { configured: Boolean(config.aiService.baseUrl), status: 'unknown' },
     routeService: { configured: Boolean(config.routeService.baseUrl), status: 'unknown' },

@@ -7,6 +7,7 @@ vi.mock('../../src/modules/tasks/collectionTask.model.js', async () => {
     CollectionTask: {
       create: vi.fn(),
       findOne: vi.fn(),
+      findById: vi.fn(),
       findByIdAndUpdate: vi.fn(),
       find: vi.fn(),
     },
@@ -63,5 +64,30 @@ describe('collectionTask.repository', () => {
 
     const [, update] = CollectionTask.findByIdAndUpdate.mock.calls[0];
     expect(update.$set.completedAt).toBeInstanceOf(Date);
+  });
+
+  it('findById looks up a task by its id', async () => {
+    CollectionTask.findById.mockResolvedValue({ _id: 'task-1' });
+
+    await taskRepository.findById('task-1');
+
+    expect(CollectionTask.findById).toHaveBeenCalledWith('task-1');
+  });
+
+  it('listQueue orders active tasks by priority, then oldest first', async () => {
+    const lean = vi.fn().mockResolvedValue([
+      { _id: 'a', priority: 'low', createdAt: new Date('2026-01-01') },
+      { _id: 'b', priority: 'critical', createdAt: new Date('2026-01-02') },
+      { _id: 'c', priority: 'high', createdAt: new Date('2026-01-01') },
+      { _id: 'd', priority: 'high', createdAt: new Date('2026-01-03') },
+    ]);
+    CollectionTask.find.mockReturnValue({ lean });
+
+    const queue = await taskRepository.listQueue();
+
+    expect(CollectionTask.find).toHaveBeenCalledWith({
+      status: { $in: ['pending', 'assigned', 'in_progress'] },
+    });
+    expect(queue.map((t) => t._id)).toEqual(['b', 'c', 'd', 'a']);
   });
 });

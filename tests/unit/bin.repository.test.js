@@ -61,6 +61,30 @@ describe('bin.repository', () => {
     );
   });
 
+  it('applyDecisionState sets fillStatus, priority, maintenanceRequired, and collectionRequired together', async () => {
+    Bin.findOneAndUpdate.mockResolvedValue({ binId: 'BIN-001', fillStatus: 'full' });
+
+    await binRepository.applyDecisionState('BIN-001', {
+      fillStatus: 'full',
+      priority: 'high',
+      maintenanceRequired: false,
+      collectionRequired: true,
+    });
+
+    expect(Bin.findOneAndUpdate).toHaveBeenCalledWith(
+      { binId: 'BIN-001' },
+      {
+        $set: {
+          fillStatus: 'full',
+          priority: 'high',
+          maintenanceRequired: false,
+          collectionRequired: true,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+  });
+
   it('list applies status and priority filters when given', async () => {
     const sortMock = vi.fn().mockResolvedValue([]);
     Bin.find.mockReturnValue({ sort: sortMock });
@@ -69,5 +93,21 @@ describe('bin.repository', () => {
 
     expect(Bin.find).toHaveBeenCalledWith({ status: 'active', priority: 'high' });
     expect(sortMock).toHaveBeenCalled();
+  });
+
+  it('findManyByBinIds queries with $in and returns lean documents', async () => {
+    const leanMock = vi.fn().mockResolvedValue([{ binId: 'BIN-001' }, { binId: 'BIN-002' }]);
+    Bin.find.mockReturnValue({ lean: leanMock });
+
+    const result = await binRepository.findManyByBinIds(['BIN-001', 'BIN-002']);
+
+    expect(Bin.find).toHaveBeenCalledWith({ binId: { $in: ['BIN-001', 'BIN-002'] } });
+    expect(result).toEqual([{ binId: 'BIN-001' }, { binId: 'BIN-002' }]);
+  });
+
+  it('findManyByBinIds short-circuits to [] for an empty/missing list, without querying', async () => {
+    expect(await binRepository.findManyByBinIds([])).toEqual([]);
+    expect(await binRepository.findManyByBinIds(undefined)).toEqual([]);
+    expect(Bin.find).not.toHaveBeenCalled();
   });
 });

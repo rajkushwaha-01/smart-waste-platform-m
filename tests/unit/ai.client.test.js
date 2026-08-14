@@ -38,7 +38,7 @@ describe('requestPrediction', () => {
   });
 
   it('posts to the configured predict path and returns the validated response', async () => {
-    const responseBody = { predictedFillLevel: 90, overflowRiskScore: 0.8 };
+    const responseBody = { predictedFillLevel: 90, overflowProbability: 0.8 };
     httpClient.post.mockResolvedValue({ data: responseBody });
 
     const result = await requestPrediction(payload, { httpClient });
@@ -69,7 +69,7 @@ describe('requestPrediction', () => {
   });
 
   it('recovers on a later attempt after transient 5xx failures', async () => {
-    const responseBody = { predictedFillLevel: 50, overflowRiskScore: 0.1 };
+    const responseBody = { predictedFillLevel: 50, overflowProbability: 0.1 };
     httpClient.post
       .mockRejectedValueOnce(axiosErrorWithResponse(503))
       .mockResolvedValueOnce({ data: responseBody });

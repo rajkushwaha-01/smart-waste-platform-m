@@ -107,12 +107,17 @@ function classifyError(err) {
  */
 function validateResponseShape(data) {
   if (!data || typeof data !== 'object') {
-    throw new AiMalformedResponseError('AI service returned a non-object response', { details: data });
-  }
-  if (typeof data.overflowRiskScore !== 'number' || typeof data.predictedFillLevel !== 'number') {
-    throw new AiMalformedResponseError('AI service response is missing expected prediction fields', {
+    throw new AiMalformedResponseError('AI service returned a non-object response', {
       details: data,
     });
+  }
+  if (typeof data.overflowProbability !== 'number' || typeof data.predictedFillLevel !== 'number') {
+    throw new AiMalformedResponseError(
+      'AI service response is missing expected prediction fields',
+      {
+        details: data,
+      },
+    );
   }
   return data;
 }

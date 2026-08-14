@@ -6,6 +6,7 @@ export const ALERT_TYPE = [
   'temperature_anomaly',
   'sensor_fault',
   'maintenance_required',
+  'critical_bin',
 ];
 export const ALERT_SEVERITY = ['low', 'medium', 'high', 'critical'];
 export const ALERT_STATUS = ['open', 'acknowledged', 'resolved'];

@@ -25,10 +25,10 @@ export const ingestTelemetry = asyncHandler(async (req, res) => {
     // unreachable, timeout, etc). This is the caller's problem to
     // retry, not a client error — surfaced as 503 rather than 500 so
     // well-behaved IoT devices/simulators know to back off and retry.
-    throw new ServiceUnavailableError(
-      'Telemetry could not be accepted right now, please retry',
-      { eventId: event.eventId, cause: err.message },
-    );
+    throw new ServiceUnavailableError('Telemetry could not be accepted right now, please retry', {
+      eventId: event.eventId,
+      cause: err.message,
+    });
   }
 
   res.status(202).json({

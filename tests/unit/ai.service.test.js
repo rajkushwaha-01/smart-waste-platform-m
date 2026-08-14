@@ -26,7 +26,7 @@ const event = {
 
 describe('predictBinTelemetry', () => {
   it('maps the telemetry event to the AI request shape', async () => {
-    requestPrediction.mockResolvedValue({ predictedFillLevel: 90, overflowRiskScore: 0.6 });
+    requestPrediction.mockResolvedValue({ predictedFillLevel: 90, overflowProbability: 0.6 });
 
     await predictBinTelemetry(event);
 
@@ -44,7 +44,7 @@ describe('predictBinTelemetry', () => {
   it('maps the AI response into the domain prediction shape', async () => {
     requestPrediction.mockResolvedValue({
       predictedFillLevel: 90,
-      overflowRiskScore: 0.6,
+      overflowProbability: 0.6,
       overflowEtaHours: 4,
       confidence: 0.95,
     });
@@ -53,14 +53,14 @@ describe('predictBinTelemetry', () => {
 
     expect(result).toEqual({
       predictedFillLevel: 90,
-      overflowRiskScore: 0.6,
+      overflowProbability: 0.6,
       overflowEtaHours: 4,
       confidence: 0.95,
     });
   });
 
   it('defaults optional fields when the AI response omits them', async () => {
-    requestPrediction.mockResolvedValue({ predictedFillLevel: 90, overflowRiskScore: 0.6 });
+    requestPrediction.mockResolvedValue({ predictedFillLevel: 90, overflowProbability: 0.6 });
 
     const result = await predictBinTelemetry(event);
 

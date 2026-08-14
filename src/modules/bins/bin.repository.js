@@ -39,9 +39,37 @@ export async function setMaintenanceRequired(binId, maintenanceRequired) {
   return Bin.findOneAndUpdate({ binId }, { $set: { maintenanceRequired } }, { new: true });
 }
 
+/**
+ * Applies the decision engine's computed output to a bin in one
+ * atomic write, rather than several separate field-setter calls.
+ * `fillStatus`/`priority`/`maintenanceRequired`/`collectionRequired`
+ * are all derived together from the same telemetry+prediction
+ * evaluation, so they're persisted together too.
+ */
+export async function applyDecisionState(
+  binId,
+  { fillStatus, priority, maintenanceRequired, collectionRequired },
+) {
+  return Bin.findOneAndUpdate(
+    { binId },
+    { $set: { fillStatus, priority, maintenanceRequired, collectionRequired } },
+    { new: true, runValidators: true },
+  );
+}
+
 export async function list({ status, priority } = {}) {
   const filter = {};
   if (status) filter.status = status;
   if (priority) filter.priority = priority;
   return Bin.find(filter).sort({ priority: -1, currentFillLevel: -1 });
+}
+
+/**
+ * Fetches multiple bins by binId in one query. Used to resolve
+ * collection-task locations before requesting route generation —
+ * CollectionTask only stores binId, not coordinates.
+ */
+export async function findManyByBinIds(binIds) {
+  if (!Array.isArray(binIds) || binIds.length === 0) return [];
+  return Bin.find({ binId: { $in: binIds } }).lean();
 }

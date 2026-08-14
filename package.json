@@ -12,6 +12,7 @@
     "worker": "node src/worker.js",
     "worker:dev": "node --watch src/worker.js",
     "lint": "eslint .",
+    "mock:iot": "node mock-iot/simulator.js",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

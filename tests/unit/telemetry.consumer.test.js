@@ -15,7 +15,7 @@ const event = {
 
 const prediction = {
   predictedFillLevel: 88,
-  overflowRiskScore: 0.42,
+  overflowProbability: 0.42,
   overflowEtaHours: 6,
   confidence: 0.9,
 };

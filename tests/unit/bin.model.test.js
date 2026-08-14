@@ -15,7 +15,9 @@ describe('Bin model', () => {
     expect(bin.validateSync()).toBeUndefined();
     expect(bin.status).toBe('active');
     expect(bin.priority).toBe('low');
+    expect(bin.fillStatus).toBe('normal');
     expect(bin.maintenanceRequired).toBe(false);
+    expect(bin.collectionRequired).toBe(false);
   });
 
   it('requires binId and location coordinates', () => {
