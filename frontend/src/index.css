@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Slim, dark scrollbars to match the console aesthetic */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #26313d transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #26313d;
+  border-radius: 9999px;
+}
+
+/* react-leaflet popups styled to match the dark UI without fighting
+   Leaflet's own inline styles */
+.leaflet-popup-content-wrapper {
+  background: #f8fafc;
+  border-radius: 8px;
+}
+.leaflet-popup-tip {
+  background: #f8fafc;
+}
