@@ -50,7 +50,7 @@ async function shutdown(signal) {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-process.on('unhandledRejection', (reason) => {
+process.on('unhandledRejection', (reason) => { 
   logger.error({ err: reason }, 'Unhandled promise rejection in telemetry consumer worker');
   shutdown('unhandledRejection');
 });
